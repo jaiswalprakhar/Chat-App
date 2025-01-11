@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Expense Tracker</title>
+    <link rel="icon" type="image/x-icon" href="../../public/Expense-Icon.png" />
+    
+    <!-- Local Bootstrap CSS -->
+    <link rel="stylesheet" href="../../public/css/bootstrap.min.css" />
+
+    <!-- Local Bootstrap JS -->
+    <script defer src="../../public/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Local Axios -->
+    <script src="../../public/js/axios.min.js"></script>
+
+    <link rel="stylesheet" href="../../styles/mystyle.css">
+
+    <script type="module" src="../JS/index.js"></script>
+  </head>
+  <body>
+    <header></header>
+    <!--Show Results with Toast-->
+    <div class="container mt-5">
+      <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="toast-header">
+              <img src="../../public/Expense-Icon.png" class="rounded me-2" alt="Expense Tracker" width="20%" height="20%" />
+              <strong class="me-auto">Expense Tracker</strong>
+              <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+          <div class="toast-body">
+                
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--Create Account Text-->
+    <div class="container-fluid mt-5">
+        <p class="fs-4 fw-bold text-center">Create new account</p>
+    </div>
+    <!--Form-->
+    <div class="container-fluid mt-4">
+      <form id="signup">
+          <div class="row mb-3">
+            <div class="col-sm-0 col-4"></div>
+            <div class="col-sm-4 col-12">
+              <label for="fullName" class="form-label fs-6 fw-semibold">Name</label>
+              <input type="text" class="form-control form-control-sm" id="fullName" placeholder="Full Name" required />
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-sm-0 col-4"></div>
+            <div class="col-sm-4 col-12">
+              <label for="emailId" class="form-label fs-6 fw-semibold">Email</label>
+              <input type="email" class="form-control form-control-sm" id="emailId" placeholder="name@example.com" required />
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-sm-0 col-4"></div>
+            <div class="col-sm-4 col-12">
+              <label for="phoneNumber" class="form-label fs-6 fw-semibold">Phone Number</label>
+              <input type="tel" class="form-control form-control-sm" id="phoneNumber" placeholder="+91-**********" required />
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-sm-0 col-4"></div>
+            <div class="col-sm-4 col-12">
+              <label for="password" class="form-label fs-6 fw-semibold">Password</label>
+              <input type="password" class="form-control form-control-sm" id="password" placeholder="********" minlength="8" maxlength="15" required />
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-sm-0 col-4"></div>
+            <div class="col-sm-4 col-12">
+              <label for="confirmPassword" class="form-label fs-6 fw-semibold">Confirm Password</label>
+              <input type="password" class="form-control form-control-sm" id="confirmPassword" placeholder="********" minlength="8" maxlength="15" required />
+            </div>
+          </div>
+          <div class="row my-4">
+            <div class="col-4"></div>
+            <div class="d-grid col-sm-4">
+              <button class="btn btn-sm btn-primary" type="submit">Sign up</button>
+            </div>
+            <div class="col-4"></div>
+          </div>
+      </form>
+    </div>
+    <!--Login Link-->
+    <div class="container-fluid mb-2">
+      <div class="row">
+        <div class="col-sm-0 col-4"></div>
+        <div class="col-sm-4 col-12 text-center">
+          <p class="fs-6 fw-light d-inline-block">Already have an account?</p>
+          <a href="./login.html" class="link">Login Here?</a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
