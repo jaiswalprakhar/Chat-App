@@ -42,9 +42,7 @@ app.use((req, res) => {
 
 //Error Handle for throwing errors manually
 app.use((err, req, res, next) => {
-    //console.error(err.stack);
     const statusCode = err.statusCode || 500;
-    //console.log(err.errors[0].type);
 
     res.status(statusCode).json({ 
         err: err,

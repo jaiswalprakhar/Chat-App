@@ -1,6 +1,6 @@
 const User = require('../models/user');
 const { generatePasswordHash, verifyPassword } = require('../util/pwdUtil');
-//const { generateAccessToken } = require('../util/jwtUtil');
+const { generateAccessToken } = require('../util/jwtUtil');
 const UserServices = require('../services/userServices');
 
 exports.createUser = async (req, res, next) => {
@@ -39,7 +39,7 @@ exports.createUser = async (req, res, next) => {
     }
 };
 
-/*exports.loginUser = async (req, res, next) => {
+exports.loginUser = async (req, res, next) => {
     const { emailId, password } = req.body;
     try {
         const where = { where: { emailId: emailId } };
@@ -51,11 +51,11 @@ exports.createUser = async (req, res, next) => {
             const passwordVerified = await verifyPassword(password, loginUserData.password);
             
             if(passwordVerified)  {
-                const token = generateAccessToken(loginUserData.id, loginUserData.fullName, loginUserData.isPremiumUser);
+                const token = generateAccessToken(loginUserData.id, loginUserData.fullName);
                 message = `Login Successful`;
                 res.status(200).json({
                     message: message,
-                    redirect: `/FRONTEND/components/Layout/expenses.html`,
+                    redirect: `/FRONTEND/components/Layout/chat.html`,
                     token: token,
                     success: true
                 });
@@ -89,7 +89,7 @@ exports.verifyLogin = (req, res, next) => {
 
         res.status(200).json({
         message: message,
-        redirect: '/FRONTEND/components/Layout/expenses.html',
+        redirect: '/FRONTEND/components/Layout/chat.html',
         success: true
         });
     }
@@ -97,4 +97,4 @@ exports.verifyLogin = (req, res, next) => {
         //console.log(err);
         next(err);
     }
-}*/
+}
