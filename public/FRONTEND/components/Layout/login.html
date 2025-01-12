@@ -6,14 +6,14 @@
     <title>Chat App</title>
     <link rel="icon" type="image/x-icon" href="../../public/Expense-Icon.png" />
     
-    <!-- Local Bootstrap CSS -->
-    <link rel="stylesheet" href="../../public/css/bootstrap.min.css" />
+      <!-- Local Bootstrap CSS -->
+      <link rel="stylesheet" href="../../public/css/bootstrap.min.css" />
 
-    <!-- Local Bootstrap JS -->
-    <script defer src="../../public/js/bootstrap.bundle.min.js"></script>
+      <!-- Local Bootstrap JS -->
+      <script defer src="../../public/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Local Axios -->
-    <script src="../../public/js/axios.min.js"></script>
+      <!-- Local Axios -->
+      <script src="../../public/js/axios.min.js"></script>
 
     <link rel="stylesheet" href="../../styles/mystyle.css">
 
@@ -37,19 +37,12 @@
       </div>
     </div>
     <!--Create Account Text-->
-    <div class="container-fluid mt-5">
-        <p class="fs-4 fw-bold text-center">Create new account</p>
+    <div class="container-fluid my-5">
+        <p class="fs-4 fw-bold text-center">Sign in to your account</p>
     </div>
     <!--Form-->
-    <div class="container-fluid mt-4">
-      <form id="signup">
-          <div class="row mb-3">
-            <div class="col-sm-0 col-4"></div>
-            <div class="col-sm-4 col-12">
-              <label for="fullName" class="form-label fs-6 fw-semibold">Name</label>
-              <input type="text" class="form-control form-control-sm" id="fullName" placeholder="Full Name" required />
-            </div>
-          </div>
+    <div class="container-fluid mt-5">
+      <form id="login">
           <div class="row mb-3">
             <div class="col-sm-0 col-4"></div>
             <div class="col-sm-4 col-12">
@@ -60,28 +53,21 @@
           <div class="row mb-3">
             <div class="col-sm-0 col-4"></div>
             <div class="col-sm-4 col-12">
-              <label for="phoneNumber" class="form-label fs-6 fw-semibold">Phone Number</label>
-              <input type="tel" class="form-control form-control-sm" id="phoneNumber" placeholder="**********" required />
-            </div>
-          </div>
-          <div class="row mb-3">
-            <div class="col-sm-0 col-4"></div>
-            <div class="col-sm-4 col-12">
-              <label for="password" class="form-label fs-6 fw-semibold">Password</label>
+                <div class="row">
+                    <div class="col-6">
+                        <label for="password" class="form-label fs-6 fw-semibold">Password</label>
+                    </div>
+                    <div class="col-6 text-end">
+                        <a href="./forgotPassword.html" class="link fs-6 fw-semibold">Forgot password?</a>
+                    </div>
+                </div>
               <input type="password" class="form-control form-control-sm" id="password" placeholder="********" minlength="8" maxlength="15" required />
-            </div>
-          </div>
-          <div class="row mb-3">
-            <div class="col-sm-0 col-4"></div>
-            <div class="col-sm-4 col-12">
-              <label for="confirmPassword" class="form-label fs-6 fw-semibold">Confirm Password</label>
-              <input type="password" class="form-control form-control-sm" id="confirmPassword" placeholder="********" minlength="8" maxlength="15" required />
             </div>
           </div>
           <div class="row my-4">
             <div class="col-4"></div>
             <div class="d-grid col-sm-4">
-              <button class="btn btn-sm btn-primary" type="submit">Sign up</button>
+              <button class="btn btn-sm btn-primary" type="submit">Sign in</button>
             </div>
             <div class="col-4"></div>
           </div>
@@ -92,8 +78,8 @@
       <div class="row">
         <div class="col-sm-0 col-4"></div>
         <div class="col-sm-4 col-12 text-center">
-          <p class="fs-6 fw-light d-inline-block">Already have an account?</p>
-          <a href="./login.html" class="link">Login Here?</a>
+          <p class="fs-6 fw-light d-inline-block">Don't have an account?</p>
+          <a href="./signup.html" class="link fs-6 fw-semibold">Create here</a>
         </div>
       </div>
     </div>
