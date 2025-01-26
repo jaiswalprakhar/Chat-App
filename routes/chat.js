@@ -6,6 +6,8 @@ const userAuthentication = require('../middlewares/auth');
 
 const router = express.Router();
 
+router.get('/count-chat', userAuthentication.authenticate, chatController.countChats);
+
 router.post('/create-chat', userAuthentication.authenticate, chatController.postChat);
 
 router.get('/get-chats', userAuthentication.authenticate, chatController.getChats);

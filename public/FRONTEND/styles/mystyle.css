@@ -7,7 +7,17 @@
 
   .chat:nth-of-type(odd) {
     background-color: grey;
-    }
+  }
+
+  .chat-box {
+    height: auto;
+    max-height: 81vh;
+    overflow: auto;
+  }
+
+  body {
+    overflow: hidden;
+  }
   
   /*Expense Table*/
   .styled-table {
