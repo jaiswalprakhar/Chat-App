@@ -39,6 +39,10 @@ const User = sequelize.define('user', {
     phoneNumber: {
         type: Sequelize.INTEGER,
         allowNull: false,
+        unique: {
+            args: true,
+            msg: 'Phone Number already exists'
+        },
         validate: {
             customValidator(value) {
               if (value.length !== 10) {

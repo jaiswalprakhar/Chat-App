@@ -18,6 +18,9 @@ const Chat = sequelize.define('chat', {
             }
           }
         }
+    },
+    receiverId: {
+      type: Sequelize.INTEGER
     }
 });
 

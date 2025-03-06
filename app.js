@@ -13,6 +13,8 @@ const sequelize = require('./util/database');
 
 const User = require('./models/user');
 const Chat = require('./models/chat');
+const Group = require('./models/group');
+const UserGroup = require('./models/user-group');
 
 const Port = process.env.PORT || 3000;
 
@@ -25,6 +27,7 @@ app.use(cors({
 
 const userRoutes = require('./routes/user');
 const chatRoutes = require('./routes/chat');
+const groupRoutes = require('./routes/group');
 
 /*const accessLogStream = fs.createWriteStream(
     path.join(__dirname, 'access.log'),
@@ -37,6 +40,7 @@ app.use(express.json());
 
 app.use('/user', userRoutes);
 app.use('/chat', chatRoutes);
+app.use('/group', groupRoutes);
 
 app.use((req, res) => {
     const urlWithoutQuery = req.path; // Extract only the path without query parameters
@@ -57,10 +61,16 @@ app.use((err, req, res, next) => {
 
 app.use(errorController.get404);
 
-Chat.belongsTo(User, { constraints: true, onDelete: 'CASCADE' });
+Chat.belongsTo(User);
 User.hasMany(Chat);
 
-sequelize.sync()
+User.belongsToMany(Group, { through: UserGroup, onDelete: "SET NULL" });
+Group.belongsToMany(User, { through: UserGroup, onDelete: "CASCADE" });
+
+Group.hasMany(Chat);
+Chat.belongsTo(Group, { onDelete: "CASCADE" });
+
+sequelize.sync(/*{ force: true }*/)
 .then(result => {
     app.listen(Port, () => {
         console.log(`Server listening at PORT ${Port}`);

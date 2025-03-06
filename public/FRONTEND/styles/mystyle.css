@@ -5,6 +5,10 @@
   color: #6610f2;
   }
 
+  .full-chat-area {
+    margin-top: -15px;
+  }
+
   .chat:nth-of-type(odd) {
     background-color: grey;
   }
@@ -12,52 +16,49 @@
   .chat-box {
     height: auto;
     max-height: 81vh;
+    /*overflow: auto;*/
+  }
+
+  .chat-input {
+    position: fixed;
+    bottom: 1px; /* Keeps it at the bottom */
+    right: 5px;
+    width: 74%; /* Adjust this for preferred width */
+    max-width: 100%; /* Ensures it does not stretch too much */
+    background-color: whitesmoke; /* Dark background */
+    padding: 5px;
+    border-radius: 5px;
+  }
+
+  .person-name, .group-name {
+    position: fixed;
+    width: 74.9%;
+    background-color: blueviolet;
+    color: whitesmoke;
+  }
+
+  .chat-start {
+    margin-top: 6%;
+    height: auto;
+    max-height: 71vh;
     overflow: auto;
+  }
+
+  .chat-with-person {
+    height: 88.9vh;
+    max-width: 88.9vh;
+    overflow: auto;
+    border-right: 1px solid grey;
+  }
+
+  .person {
+    cursor: pointer;
+  }
+
+  .person:hover {
+    background-color: grey;
   }
 
   body {
     overflow: hidden;
-  }
-  
-  /*Expense Table*/
-  .styled-table {
-  border-collapse: collapse;
-  margin: 25px 0;
-  font-size: 0.9em;
-  font-family: sans-serif;
-  min-width: 400px;
-  width: 100%;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
-  }
-  
-  .styled-table thead tr {
-  background-color: #6610f2;
-  color: #ffffff;
-  text-align: left;
-  }
-  
-  .styled-table th,
-  .styled-table td {
-  padding: 12px 15px;
-  }
-  
-  .styled-table tbody tr {
-  border-bottom: 1px solid #dddddd;
-  }
-  
-  .styled-table tbody tr:nth-of-type(even) {
-  background-color: #f3f3f3;
-  }
-  
-  .styled-table tbody tr:last-of-type {
-  border-bottom: 2px solid #009879;
-  }
-  
-  .styled-table tbody tr.active-row {
-  font-weight: bold;
-  color: #009879;
-  }
-  
-  #leaderBoard-list {
-  display: none;
   }
