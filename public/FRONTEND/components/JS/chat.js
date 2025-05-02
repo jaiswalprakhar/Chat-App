@@ -15,6 +15,60 @@ const showToastResult = (message) => {
     toastBootstrap.show();
 };
 
+const socket = io('http://localhost:3000', {
+            auth: {
+                token: localStorage.getItem('token')
+            }
+        });
+    
+socket.on('connect', () => {
+    console.log(`Connected to server with Id = ${socket.id}`);
+});
+
+//Show newly created group to users added by Admin-
+socket.on('new-group-added-user', (message, createdGroupData) => {
+    showGroups(createdGroupData);
+    showToastResult(message);
+});
+
+//Show received messages-
+socket.on('receive-message', (sendersfullName, response) => {
+    const token = localStorage.getItem('token');
+    const decodedToken = parseJwt(token);
+    //console.log(sendersfullName, response);
+
+    if(response.receiverId === null) {
+        //console.log(response.groupId);
+        let groupId = document.getElementsByClassName('group-name')[0].id;
+        groupId = Number(groupId.slice(9));
+        //console.log(groupId);
+        if(groupId === response.groupId) {
+            showReceivedChat(sendersfullName, response);
+        }
+    }
+    else {
+        const senderId = Number(document.getElementsByClassName('person-name')[0].id);
+        if((decodedToken.userId === Number(response.receiverId)) && (senderId === response.userId)) {
+            showReceivedChat(sendersfullName, response);
+        }
+    }
+});
+
+//Admin removed Group Member-
+socket.on('admin-removed-group-user', message => {
+    chatTextBox.className = "input-group chat-input invisible";
+    showToastResult(message);
+});
+
+socket.on('connect_error', (error) => {
+    console.log(`Connection error: ${error.message}`);
+    showToastResult(error.message);
+});
+
+socket.on('disconnect', () => {
+    console.log('Disconnected from socket server');
+});
+
 const parseJwt = (token) => {
     let base64Url = token.split('.')[1];
     let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -62,7 +116,7 @@ const logOut = () => {
 if (window.location.pathname === '/FRONTEND/components/Layout/chat.html') {
     window.addEventListener("DOMContentLoaded", () => {
         getGroupOrPersonList();
-        
+
         // If clicked on link in chat-
         chats.addEventListener("click", (event) => {
             if (event.target.classList.contains('group-invite-link')) {
@@ -94,9 +148,15 @@ const getGroupOrPersonList = async () => {
             }
             else {
                 response.data.groupsListData.forEach((val) => {
+                    socket.emit('join-group', val.id, (message) => {
+                        //console.log(message);
+                    });
                     showGroups(val);
                 })
                 response.data.usersListData.forEach((val) => {
+                    socket.emit('join-personal-chat', val.id, (message) => {
+                        //console.log(message);
+                    });
                     showPersons(val, decodedToken);
                 })
             }
@@ -125,7 +185,7 @@ export const handleCreateGroup = (event) => {
     event.preventDefault();
     const myobj = {
         groupName: event.target.groupName.value,
-        userIdList: addGroupParticipants
+        usersList: addGroupParticipants
     }
 
     event.target.reset();
@@ -134,26 +194,26 @@ export const handleCreateGroup = (event) => {
 }
 
 const createGroup = (obj) => {  
-    const token = localStorage.getItem('token');
-    const decodedToken = parseJwt(token);
+    try {
+        //User created and added others in new group
+        socket.emit('create-group', obj, (response) => {
+            if (response.success) {
+                //console.log(response);
+                const modal = bootstrap.Modal.getInstance(document.getElementById("exampleModal"));
+                modal.hide();
 
-    axios.post('http://localhost:3000/group/create-group', obj, { headers: {"Authorization": token} })
-        .then((response) => {
-            const modal = bootstrap.Modal.getInstance(document.getElementById("exampleModal"));
-            modal.hide();
-            //console.log(response.data.createdGroupData);
-            //showChat(response.data.newChatMsg, decodedToken);
-            showGroups(response.data.createdGroupData);
-            showToastResult(response.data.message);
-        })
-        .catch((err) => {
-            if(err.response.status === 500) {
-                showToastResult("Something went wrong at Backend");
+                showGroups(response.createdGroupData);
+                showToastResult(response.message);
+            } 
+            else {
+                showToastResult(response.message);
             }
-            else  {
-                showToastResult(err.response.data.message);
-            }
-        })
+        });
+    }
+    catch(err) {
+        console.log(err);
+        showToastResult(err.message);
+    }
 }
 
 const showGroups = (obj) => {
@@ -187,7 +247,7 @@ const showPersons = (obj, token) => {
     persons.appendChild(childNode);
 }
 
-const showChatBox = (obj) => {
+const showChatBox = async (obj) => {
     const personDetailsBar = document.getElementsByClassName('person-details')[0];
     personDetailsBar.innerHTML = "";
     //chats.innerHTML = "";
@@ -224,7 +284,7 @@ const showChatBox = (obj) => {
         }
     }
 
-    console.log(obj.id);
+    //console.log(obj.id);
     if(chatTextBox.className === "input-group chat-input invisible") {
         chatTextBox.className = "input-group chat-input visible";
     }
@@ -236,21 +296,29 @@ const showChatBox = (obj) => {
     localStorage.setItem("lastMsgId", 0);
     chats.innerHTML = "";
 
-    //setInterval(() => {
-        countChats();
+    do {
+        if(obj.groupName) {
+            countChats(obj.id, null);
+        }
+        else {
+            countChats(null, obj.id);
+        }
         const totalChats = JSON.parse(localStorage.getItem("totalChats"));
-        const lastMsgId = JSON.parse(localStorage.getItem('lastMsgId'));
-        //console.log(lastMsgId);
-        if(lastMsgId <= totalChats)  {
+        let lastMsgId = JSON.parse(localStorage.getItem('lastMsgId'));
+        //console.log(lastMsgId, totalChats);
+        if(lastMsgId < totalChats)
+        {
             if(obj.groupName) {
-                getChats(lastMsgId, currentMessage, obj.id, null);
+                await getChats(lastMsgId, currentMessage, obj.id, null);
             }
             else {
-                getChats(lastMsgId, currentMessage, null, obj.id);
+                await getChats(lastMsgId, currentMessage, null, obj.id);
             }
         }
-            //console.log("All Chats are Displayed");
-    //}, 1000);
+        else {
+            break;
+        }
+    } while(JSON.parse(localStorage.getItem("lastMsgId")) <= JSON.parse(localStorage.getItem("totalChats")));
 }
 
 const getGroupData = async (groupId) => {
@@ -436,6 +504,7 @@ const addParticipant = async (obj) => {
             //showgroupDetails(response.data.userAddedData[0], decodedToken, response.data.userAddedData);
             const modal = bootstrap.Modal.getInstance(document.getElementById("exampleModalCenteredScrollable"));
             modal.hide();
+            console.log(response.data.userAddedData);
             showToastResult(response.data.message);
         }
     } 
@@ -495,6 +564,8 @@ window.handleRemoveParticipant = (userId, groupId) => {
 
 const removeParticipantData = async (obj) => {
     try {
+        obj.groupName = document.getElementById('createdGroupName').value;
+
         const token = localStorage.getItem('token');
         const response = await axios.delete('http://localhost:3000/group/remove-participant', 
         {
@@ -504,6 +575,9 @@ const removeParticipantData = async (obj) => {
         if(response.status === 200) {
             const modal = bootstrap.Modal.getInstance(document.getElementById("exampleModalCenteredScrollable"));
             modal.hide();
+            socket.emit('leave-group', obj, message => {
+                console.log(message);
+            });
             showToastResult(response.data.message);
         }
     }
@@ -518,12 +592,13 @@ const removeParticipantData = async (obj) => {
     }
 }
 
-const countChats = async () => {
+const countChats = async (groupId, receiverId) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('http://localhost:3000/chat/count-chat', { headers: {"Authorization": token} });
+        const response = await axios.get(`http://localhost:3000/chat/count-chat?groupId=${groupId}
+        &receiverId=${receiverId}`, { headers: {"Authorization": token} });
         if(response.status === 200) {
-            showToastResult(response.data.message);
+            //showToastResult(response.data.message);
             localStorage.setItem("totalChats", response.data.totalChats);
         }
     }
@@ -539,7 +614,7 @@ const countChats = async () => {
 
 const getChats = (lastMsgId, currentMessage, groupId, receiverId) => {
     const token = localStorage.getItem('token');
-    axios.get(`http://localhost:3000/chat/get-chats?lastMsgId=${lastMsgId}&groupId=${groupId}
+    return axios.get(`http://localhost:3000/chat/get-chats?lastMsgId=${lastMsgId}&groupId=${groupId}
      &receiverId=${receiverId}`, { headers: {"Authorization": token} })
     .then((response) => {
         if(response.data.usersChat.length <= 0)
@@ -613,14 +688,52 @@ export const handleChatSubmit = (event) => {
         groupId = document.getElementsByClassName('group-name')[0].id;
         groupId = Number(groupId.slice(9));
     }
-    const myobj = {
-        chatMsg: event.target.chatMsg.value,
-        receiverId: receiverId,
-        groupId: groupId
+
+    //Used to select file by file reader-
+    const reader = new FileReader();
+    const file = document.getElementById('chatFile').files[0];
+    const fileSizeInMB = 1;
+    const fileSizeInBytes = fileSizeInMB * 1024 * 1024;
+
+    if(!file && !event.target.chatMsg.value) {
+        showToastResult("No Text or File Selected");
+        return;
+    }
+    
+    if(file) {
+        if(file.size > fileSizeInBytes) {
+            showToastResult(`File size should not be greater than ${fileSizeInMB}MB`);
+            return;
+        }
+        //console.log(file);
+
+        reader.readAsDataURL(file); //Read this file as Data URL Base64 code
+        reader.onload = () => {
+           const myobj = {
+                chatMsg: null,
+                receiverId: receiverId,
+                groupId: groupId,
+                fileName: file.name,
+                mimeType: file.type,
+                file: reader.result
+            }
+            createChat(myobj);
+        }
+    }
+    else {
+        const myobj = {
+            chatMsg: event.target.chatMsg.value,
+            receiverId: receiverId,
+            groupId: groupId,
+            fileName: null,
+            mimeType: null,
+            file: null
+        }
+
+        createChat(myobj);
     }
 
     event.target.reset();
-    createChat(myobj);
 }
 
 const createChat = (obj) => {
@@ -628,7 +741,25 @@ const createChat = (obj) => {
     const decodedToken = parseJwt(token);
     //console.log(decodedToken);
 
-    axios.post('http://localhost:3000/chat/create-chat', obj, { headers: {"Authorization": token} })
+    try {
+        //User created and added others in new group
+        socket.emit('send-message', obj, (response) => {
+            if (response.success) {
+                //console.log(response);
+                showChat(response.newChatMsg, decodedToken);
+                showToastResult(response.message);
+            } 
+            else {
+                showToastResult(response.message);
+            }
+        });
+    }
+    catch(err) {
+        //console.log(err.message);
+        showToastResult(err.message);
+    }
+
+    /*axios.post('http://localhost:3000/chat/create-chat', obj, { headers: {"Authorization": token} })
         .then((response) => {
             //console.log(response.data);
             showChat(response.data.newChatMsg, decodedToken);
@@ -641,7 +772,7 @@ const createChat = (obj) => {
             else  {
                 showToastResult(err.response.data.message);
             }
-        })
+        })*/
 }
 
 const showChat = (obj, token) => {
@@ -650,29 +781,117 @@ const showChat = (obj, token) => {
     const isLink = urlRegex.test(obj.chatMsg);
     let childNode="";
     if(obj.userId === token.userId) {
-        if(isLink)  {
-            childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word;">
-            You: <a class="link-primary group-invite-link" data-userid="${obj.userId}"
-            data-msg="${encodeURIComponent(obj.chatMsg)}" style=" cursor: pointer;">${obj.chatMsg}</a>
-            </div>`;
+        if(obj.chatMsg !== null) {
+            if(isLink)  {
+                childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word;">
+                You: <a class="link-primary group-invite-link" data-userid="${obj.userId}"
+                data-msg="${encodeURIComponent(obj.chatMsg)}" style="cursor: pointer;">${obj.chatMsg}</a>
+                </div>`;
+            }
+            else {
+                childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word;">You: ${obj.chatMsg}</div>`;
+            }
         }
         else {
-            childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word;">You: ${obj.chatMsg}</div>`;
+            if(obj.mimeType === "image/jpeg") {
+                childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word; cursor: pointer;">
+                You: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="${obj.fileUrl}" target="_blank">
+                <img src="${obj.fileUrl}" width="250" height="300"></a>
+                </div>`;
+            }
+            else if(obj.mimeType === "video/mp4") {
+                childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word; cursor: pointer;">
+                You: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<video width="300" height="250" controls><source 
+                src="${obj.fileUrl}" type="${obj.mimeType}" /></video>
+                </div>`;
+            }
+            else {
+                childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word; cursor: pointer;">
+                You: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="${obj.fileUrl}" target="_blank" 
+                style="text-decoration:none;"><img src="../../public/PDF-Icon.png" width="100" height="100">
+                <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${obj.fileName}</a>
+                </div>`;
+            }
         }
     }
     else {
-        if(isLink)  {
-            childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word;">
-            ${obj.user.fullName}: <a class="link-primary group-invite-link" data-userid="${obj.userId}"
-            data-msg="${encodeURIComponent(obj.chatMsg)}" style=" cursor: pointer;">${obj.chatMsg}</a>
-            </div>`;
+        if(obj.chatMsg !== null) {
+            if(isLink)  {
+                childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word;">
+                ${obj.user.fullName}: <a class="link-primary group-invite-link" data-userid="${obj.userId}"
+                data-msg="${encodeURIComponent(obj.chatMsg)}" style="cursor: pointer;">${obj.chatMsg}</a>
+                </div>`;
+            }
+            else {
+                childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word;">${obj.user.fullName}: ${obj.chatMsg}</div>`;
+            }
         }
         else {
-            childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word;">${obj.user.fullName}: ${obj.chatMsg}</div>`;
+            if(obj.mimeType === "image/jpeg") {
+                childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word; cursor: pointer;">
+                ${obj.user.fullName}: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="${obj.fileUrl}" target="_blank" 
+                style="text-decoration:none;"><img src="${obj.fileUrl}" width="250" height="300"></a>
+                </div>`;
+            }
+            else if(obj.mimeType === "video/mp4") {
+                childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word; cursor: pointer;">
+                ${obj.user.fullName}: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<video width="300" height="250" controls>
+                <source src="${obj.fileUrl}" type="${obj.mimeType}" /></video>
+                </div>`;
+            }
+            else {
+                childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word; cursor: pointer;">
+                ${obj.user.fullName}: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="${obj.fileUrl}" target="_blank" 
+                style="text-decoration:none;"><img src="../../public/PDF-Icon.png" width="100" height="100">
+                <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${obj.fileName}</a>
+                </div>`;
+            }
         }
     }
 
     chats.innerHTML += childNode;
+    scrollToBottom();
+}
+
+const showReceivedChat = (sendersfullName, obj) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const isLink = urlRegex.test(obj.chatMsg);
+    let childNode="";
+    if(obj.chatMsg !== null) {
+        if(isLink)  {
+            childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word;">
+            ${sendersfullName}: <a class="link-primary group-invite-link" data-userid="${obj.userId}"
+            data-msg="${encodeURIComponent(obj.chatMsg)}" style=" cursor: pointer;">${obj.chatMsg}</a>
+            </div>`;
+        }
+        else {
+            childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word;">${sendersfullName}: ${obj.chatMsg}</div>`;
+        }
+    }
+    else {
+        if(obj.mimeType === "image/jpeg") {
+            childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word; cursor: pointer;">
+            ${sendersfullName}: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="${obj.fileUrl}" target="_blank" 
+            style="text-decoration:none;"><img src="${obj.fileUrl}" width="250" height="300"></a>
+            </div>`;
+        }
+        else if(obj.mimeType === "video/mp4") {
+            childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word; cursor: pointer;">
+            ${sendersfullName}: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<video width="300" height="250" controls>
+            <source src="${obj.fileUrl}" type="${obj.mimeType}" /></video>
+            </div>`;
+        }
+        else {  //if(obj.mimeType === "application/pdf" || "text/plain") 
+            childNode = `<div class="chat fw-semibold p-3 col" style="word-wrap: break-word; cursor: pointer;">
+            ${sendersfullName}: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="${obj.fileUrl}" target="_blank" 
+            style="text-decoration:none;"><img src="../../public/PDF-Icon.png" width="100" height="100">
+            <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${obj.fileName}</a>
+            </div>`;
+        }
+    }
+
+    chats.innerHTML += childNode;
+    scrollToBottom();
 }
 
 const groupInviteLink = (chatMsg) => {
@@ -702,6 +921,9 @@ const groupInviteJoinGroup = async (obj) => {
 
         if(response.status === 201) {
             //console.log(response.data);
+            socket.emit('join-group', response.data.groupData.id, (message) => {
+                console.log(message);
+            });
             showGroups(response.data.groupData);
             showToastResult(response.data.message);
         }
@@ -740,7 +962,7 @@ const renameGroup = async (myobj) => {
             const modal = bootstrap.Modal.getInstance(document.getElementById("exampleModalCenteredScrollable"));
             modal.hide();
             showToastResult(response.data.message);
-            renameGroupElements(response.data.updatedGroupData);
+            renameGroupName(response.data.updatedGroupData);
         }
     } 
     catch (err) {
@@ -754,7 +976,7 @@ const renameGroup = async (myobj) => {
     }
 }
 
-const renameGroupElements = (groupData) => {
+const renameGroupName = (groupData) => {
     const groupListChild = document.getElementById(`sideGroup-${groupData.id}`);
     groupListChild.innerText = `${groupData.groupName} (Group)`;
 
@@ -777,6 +999,12 @@ if(document.getElementById('exitGroupBtn')) {
         chatTextBox.className = "input-group chat-input invisible";
         //chats.innerHTML += `<h1 class="fw-bold text-center" style="color: #6610f2;">Group Left</h1>`;
     };
+}
+
+//Function for automatic scrolling to bottom when message is sent-
+const scrollToBottom = () => {
+    //console.log(chats.scrollHeight);
+	document.getElementsByClassName('chat-start')[0].scrollTo(0, chats.scrollHeight);
 }
 
 /*const removeParticipant = (groupId) => {

@@ -5,68 +5,6 @@ const uuid = require('uuid');
 const sequelize = require('../util/database');
 const UserServices = require('../services/userServices');
 
-exports.createGroup = async (req, res, next) => {
-    const t = await sequelize.transaction();
-    const groupName = req.body.groupName;
-    const usersList = req.body.userIdList;
-
-    try {
-        if(usersList.length <= 0) {
-            const error = new Error('Add Participants in the group');
-            error.statusCode = 403;
-            throw error;
-        } 
-        const usersData = [];
-        for(let val of usersList){
-            if(Number(val) !== req.user.phoneNumber) {
-                const howMany = 'One';
-                const where = {
-                where: { phoneNumber: val }
-                };
-                const user = await UserServices.findData(User, howMany, where);
-                if(!user)   {
-                    const error = new Error('User does not exist');
-                    error.statusCode = 404;
-                    throw error;
-                }
-                usersData.push(user);
-            }
-            else {
-                const error = new Error('Do not add your own PhoneNumber');
-                error.statusCode = 403;
-                throw error;
-            }
-        }
-        
-        const groupData = {
-            groupName : groupName,
-            createdBy: req.user.id,
-            groupInvite: uuid.v4()
-        }
-
-        const createGroupData = await UserServices.createData(Group, groupData, "", { transaction: t });
-        const addAdminData = await req.user.addGroup(createGroupData, { through: { admin: true }, transaction: t });
-        const addMembersData = await createGroupData.addUsers(usersData, { through: { admin: false }, transaction: t });
-        
-        if(addAdminData && addMembersData) {
-            await t.commit();
-            res.status(201).json({
-                message: `${groupName} group created successfully`,
-                createdGroupData: createGroupData,
-                success: true
-            });
-        }
-    }
-    catch (err) {
-        //console.log(err);
-        await t.rollback();
-        if(err.name === 'SequelizeValidationError' || 'SequelizeUniqueConstraintError') {
-            err.statusCode = 400;
-        }
-        next(err);
-    }
-}
-
 exports.getGroupOrPersonList = async (req, res, next) => {
     try {
         const howMany = 'All';
@@ -141,11 +79,6 @@ exports.addParticipant = async (req, res, next) => {
     const groupId = req.body.groupId;
 
     try {
-        /*const where = {
-            where : { phoneNumber: phoneNumber },
-            attributes: ['id']
-        };*/
-
         const howMany = 'One';
         const where = {
             where : { phoneNumber: phoneNumber },

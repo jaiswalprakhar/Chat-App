@@ -10,7 +10,6 @@ const Chat = sequelize.define('chat', {
     },
     chatMsg: {
         type: Sequelize.STRING,
-        allowNull: false,
         validate: {
           customValidator(value) {
             if (value === "") {
@@ -21,6 +20,15 @@ const Chat = sequelize.define('chat', {
     },
     receiverId: {
       type: Sequelize.INTEGER
+    },
+    fileName: {
+      type: Sequelize.STRING      
+    },
+    mimeType: {
+      type: Sequelize.STRING      
+    },
+    fileUrl: {
+      type: Sequelize.STRING   
     }
 });
 

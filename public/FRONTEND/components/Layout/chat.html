@@ -12,10 +12,17 @@
     <!-- Local Bootstrap JS -->
     <script defer src="../../public/js/bootstrap.bundle.min.js"></script>
 
+    <!--<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>-->
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" 
+    integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" 
+    crossorigin="anonymous"></script>
+
     <!-- Local Axios -->
     <script src="../../public/js/axios.min.js"></script>
 
     <link rel="stylesheet" href="../../styles/mystyle.css">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 
     <!--<script src="https://checkout.razorpay.com/v1/checkout.js"></script>-->
 
@@ -151,6 +158,9 @@
           <form id="chatForm">
             <div class="input-group chat-input invisible" id="chatTextBox">
                 <input type="text" class="form-control" id="chatMsg" placeholder="Message Here" aria-label="Message Here" aria-describedby="button-addon2">
+                <label for="chatFile" class="material-icons" style="cursor: pointer; padding-top: 0.5rem;">
+                  attachment</label>
+                <input type="file" id="chatFile" name="chatFile" hidden>
                 <button class="btn btn-outline-primary fw-semibold text-light" type="submit" id="button-addon2">Send</button>
             </div>
           </form>

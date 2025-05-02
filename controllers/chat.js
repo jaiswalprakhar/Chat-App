@@ -8,8 +8,22 @@ const { Op } = require('sequelize');
 
 exports.countChats = async (req, res, next) => {
     try {
-        const totalChats = await Chat.count();
-    
+        const groupId = req.query.groupId;
+        const receiverId = req.query.receiverId;
+
+        let totalChats
+        if(receiverId == "null") {
+            totalChats = await Chat.count({ where: { groupId: groupId } });
+        }
+        else {
+            totalChats = await Chat.count({ where: {
+                [Op.or]: [
+                    { userId: req.user.id, receiverId: receiverId },
+                    { userId: receiverId, receiverId: req.user.id }
+                ]
+            } });
+        }
+        console.log("totalChats=", totalChats);
         return totalChats > 0 ? res.status(200).json({
             totalChats: totalChats,
             success: true
@@ -87,11 +101,6 @@ exports.postChat = async (req, res, next) => {
 
 exports.getChats = async (req, res, next) => {
     try {
-            /*const howMany = 'All';
-            const where = {
-                order: [['createdAt', 'ASC']]
-            };
-            const usersChatData = await UserServices.findData(Chat, howMany, where);*/
             let lastMsgId = req.query.lastMsgId;
             let groupId = req.query.groupId;
             let receiverId = req.query.receiverId;
@@ -100,7 +109,7 @@ exports.getChats = async (req, res, next) => {
                 lastMsgId = 0;
             }
             lastMsgId = Number(lastMsgId);
-            console.log("lastMsgId=", lastMsgId);
+            //console.log("lastMsgId=", lastMsgId);
             
             let usersChatData;
             
@@ -113,7 +122,7 @@ exports.getChats = async (req, res, next) => {
                         attributes: ['id', 'fullName'], // Select specific fields (optional)
                         },
                     ],
-                    attributes: ['id', 'chatMsg', 'userId'], // Select fields from User model (optional)
+                    attributes: ['id', 'chatMsg', 'userId', 'fileName', 'mimeType', 'fileUrl'], // Select fields from User model (optional)
                     order: [
                         ['id', 'ASC'], // Order Users by name (ascending)
                         ],
@@ -145,6 +154,7 @@ exports.getChats = async (req, res, next) => {
             }
 
             //console.log(usersChatData);
+            lastMsgId = lastMsgId + usersChatData.length;
 
             if(!usersChatData) {
                 throw new Error('Unable to fetch Chats');
@@ -155,7 +165,7 @@ exports.getChats = async (req, res, next) => {
             return res.status(200).json({
                 message: message,
                 usersChat: usersChatData,
-                lastMsgId: lastMsgId + usersChatData.length,
+                lastMsgId: lastMsgId,
                 success: true
             });
     }

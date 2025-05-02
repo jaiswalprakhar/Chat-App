@@ -4,6 +4,9 @@ const fs = require('fs');
 const express = require('express');
 dotenv.config({ path: './.env' });
 const bodyParser = require('body-parser');
+const http = require('http');
+const { Server } = require('socket.io');
+const { authenticateSocket } = require('./middlewares/socketAuth');
 const cors = require('cors');
 
 const morgan = require('morgan');
@@ -61,6 +64,36 @@ app.use((err, req, res, next) => {
 
 app.use(errorController.get404);
 
+// Socket Initialization-
+const socketController = require('./controllers/socket');
+const chatSocket = require('./sockets/chatSocket');
+const groupSocket = require('./sockets/groupSocket');
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:3000",
+        methods: ["GET", "POST", "DELETE"]
+    },
+    maxHttpBufferSize: 5 * 1024 * 1024 // 5MB limit
+});
+
+io.use(authenticateSocket);
+
+io.on('connection', async (socket) => {
+    console.log(`Connected with ${socket.id}`);
+    const user = await socketController.getUserDetails(socket);
+    socketController.addUserSocket(user, socket);
+
+    chatSocket(io, user, socket);
+    groupSocket(io, user, socket);
+
+    socket.on('disconnect', () => {
+        socketController.removeUserSocket(user.id);
+        socketController.showAllSockets();
+        console.log('Socket disconnected');
+    });
+})
+
 Chat.belongsTo(User);
 User.hasMany(Chat);
 
@@ -72,7 +105,7 @@ Chat.belongsTo(Group, { onDelete: "CASCADE" });
 
 sequelize.sync(/*{ force: true }*/)
 .then(result => {
-    app.listen(Port, () => {
+    server.listen(Port, () => {
         console.log(`Server listening at PORT ${Port}`);
     });
 })

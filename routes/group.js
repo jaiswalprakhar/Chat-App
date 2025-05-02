@@ -6,8 +6,6 @@ const userAuthentication = require('../middlewares/auth');
 
 const router = express.Router();
 
-router.post('/create-group', userAuthentication.authenticate, groupController.createGroup);
-
 router.get('/get-persons-groups-list', userAuthentication.authenticate, groupController.getGroupOrPersonList);
 
 router.get('/get-group-data/:id', userAuthentication.authenticate, groupController.getGroupData);
