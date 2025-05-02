@@ -20,6 +20,7 @@ const Group = require('./models/group');
 const UserGroup = require('./models/user-group');
 
 const Port = process.env.PORT || 3000;
+require('./cron/archiveOldChat');
 
 const app = express();
 
